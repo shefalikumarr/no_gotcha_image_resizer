@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>Free Image Stretcher - Resize Images Without Keeping Aspect Ratio</title>
+    <meta name="description" content="Free tool to stretch or squish images to any dimensions. No aspect ratio lock. No uploads to servers, no ads, completely private.">
+    <meta name="keywords" content="image stretcher, stretch image, squish image, resize without aspect ratio, free image resizer, distort image dimensions">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Free Image Stretcher - No Aspect Ratio Lock">
+    <meta property="og:description" content="Stretch or squish images to any size. No ads, no uploads, runs in your browser.">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: normal;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .notice {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 12px 16px;
+            margin-bottom: 30px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .drop-zone {
+            border: 2px dashed #aaa;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #fff;
+            margin-bottom: 30px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .drop-zone:hover {
+            border-color: #666;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #333;
+            background: #fafafa;
+        }
+
+        .drop-zone.hidden {
+            display: none;
+        }
+
+        .drop-zone-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-subtext {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .editor {
+            display: none;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .editor.visible {
+            display: block;
+        }
+
+        .size-controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        .original-size {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .preview-container {
+            background: #eee;
+            margin-bottom: 20px;
+            width: 100%;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        .resizable-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px dashed #666;
+        }
+
+        .resizable-wrapper img {
+            display: block;
+            background: repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+        }
+
+        .resize-handle {
+            position: absolute;
+            background: #333;
+            border: 1px solid #fff;
+        }
+
+        .resize-handle.corner {
+            width: 12px;
+            height: 12px;
+            cursor: nwse-resize;
+        }
+
+        .resize-handle.edge {
+            background: #555;
+        }
+
+        .resize-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+        .resize-handle.e { right: -4px; top: 50%; transform: translateY(-50%); width: 8px; height: 30px; cursor: ew-resize; }
+        .resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); width: 30px; height: 8px; cursor: ns-resize; }
+
+        .size-label {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #333;
+            white-space: nowrap;
+            background: #fff;
+            padding: 2px 6px;
+            border: 1px solid #ccc;
+        }
+
+        .playground-info {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 10px;
+            color: #999;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: 1px solid #333;
+            background: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: #333;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .quick-btn:hover {
+            background: #eee;
+            border-color: #999;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+            font-size: 12px;
+            color: #888;
+        }
+
+        footer a {
+            color: #666;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Image Stretcher</h1>
+            <p class="subtitle">Stretch or squish images to any size. No aspect ratio lock.</p>
+        </header>
+
+        <div class="notice">
+            <strong>Privacy first:</strong> All processing happens locally in your browser. 
+            Your images are never uploaded to any server.
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-text">Drop an image here</div>
+            <div class="drop-zone-subtext">or click to select a file</div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+
+        <div class="editor" id="editor">
+            <div class="size-controls">
+                <div class="input-group">
+                    <label for="widthInput">Width (px)</label>
+                    <input type="number" id="widthInput" min="1" max="10000">
+                    <div class="original-size" id="originalWidth">Original: --</div>
+                </div>
+                <div class="input-group">
+                    <label for="heightInput">Height (px)</label>
+                    <input type="number" id="heightInput" min="1" max="10000">
+                    <div class="original-size" id="originalHeight">Original: --</div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="resetToOriginal()">Reset to original</button>
+                <button class="quick-btn" onclick="scaleBy(0.5)">50%</button>
+                <button class="quick-btn" onclick="scaleBy(0.75)">75%</button>
+                <button class="quick-btn" onclick="scaleBy(1.5)">150%</button>
+                <button class="quick-btn" onclick="scaleBy(2)">200%</button>
+                <button class="quick-btn" onclick="doubleWidth()">Double width</button>
+                <button class="quick-btn" onclick="doubleHeight()">Double height</button>
+                <button class="quick-btn" onclick="halveWidth()">Halve width</button>
+                <button class="quick-btn" onclick="halveHeight()">Halve height</button>
+            </div>
+
+            <div class="preview-container" id="previewContainer">
+                <div class="resizable-wrapper" id="resizableWrapper">
+                    <img id="preview" alt="Preview">
+                    <div class="resize-handle corner se" data-handle="se"></div>
+                    <div class="resize-handle edge e" data-handle="e"></div>
+                    <div class="resize-handle edge s" data-handle="s"></div>
+                    <div class="size-label" id="sizeLabel">-- x --</div>
+                </div>
+                <div class="playground-info">Drag handles to resize</div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" onclick="downloadImage()">Download</button>
+                <button class="btn" onclick="loadNewImage()">Load new image</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                <a href="index.html">Image Compressor</a> · 
+                Open source. 
+                <a href="https://github.com/shefalikumarr/no_gotcha_image_resizer" target="_blank" rel="noopener">View on GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Playground constants
+        const PLAYGROUND_WIDTH = 700;
+        const PLAYGROUND_HEIGHT = 400;
+        const PLAYGROUND_PADDING = 60; // Leave room for handles and label
+
+        let originalImage = null;
+        let originalWidth = 0;
+        let originalHeight = 0;
+        let currentWidth = 0;
+        let currentHeight = 0;
+        let displayScale = 1; // Scale factor for display
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const widthInput = document.getElementById('widthInput');
+        const heightInput = document.getElementById('heightInput');
+        const resizableWrapper = document.getElementById('resizableWrapper');
+        const sizeLabel = document.getElementById('sizeLabel');
+        const previewContainer = document.getElementById('previewContainer');
+
+        // Drag resize state
+        let isResizing = false;
+        let currentHandle = null;
+        let startX, startY, startWidth, startHeight;
+
+        // Event listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                loadImage(e.target.files[0]);
+            }
+        });
+
+        widthInput.addEventListener('input', updateFromInputs);
+        heightInput.addEventListener('input', updateFromInputs);
+
+        // Resize handle events
+        document.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.addEventListener('mousedown', startResize);
+        });
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+
+        // Touch support
+        document.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.addEventListener('touchstart', startResize, { passive: false });
+        });
+        document.addEventListener('touchmove', doResize, { passive: false });
+        document.addEventListener('touchend', stopResize);
+
+        function startResize(e) {
+            e.preventDefault();
+            isResizing = true;
+            currentHandle = e.target.dataset.handle;
+            
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            startWidth = currentWidth;
+            startHeight = currentHeight;
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            e.preventDefault();
+
+            const touch = e.touches ? e.touches[0] : e;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+
+            // Convert screen pixels to actual image pixels using display scale
+            const actualDeltaX = deltaX / displayScale;
+            const actualDeltaY = deltaY / displayScale;
+
+            let newWidth = startWidth;
+            let newHeight = startHeight;
+
+            // Handle different resize directions
+            if (currentHandle.includes('e')) newWidth = Math.max(20, startWidth + actualDeltaX);
+            if (currentHandle.includes('s')) newHeight = Math.max(20, startHeight + actualDeltaY);
+
+            currentWidth = Math.round(newWidth);
+            currentHeight = Math.round(newHeight);
+
+            widthInput.value = currentWidth;
+            heightInput.value = currentHeight;
+            
+            updatePreview();
+        }
+
+        function stopResize() {
+            isResizing = false;
+            currentHandle = null;
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    originalWidth = img.width;
+                    originalHeight = img.height;
+                    currentWidth = originalWidth;
+                    currentHeight = originalHeight;
+
+                    widthInput.value = originalWidth;
+                    heightInput.value = originalHeight;
+                    document.getElementById('originalWidth').textContent = `Original: ${originalWidth}`;
+                    document.getElementById('originalHeight').textContent = `Original: ${originalHeight}`;
+
+                    updatePreview();
+                    
+                    dropZone.classList.add('hidden');
+                    editor.classList.add('visible');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateFromInputs() {
+            currentWidth = parseInt(widthInput.value) || currentWidth;
+            currentHeight = parseInt(heightInput.value) || currentHeight;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            if (!originalImage) return;
+
+            // Calculate scale to fit in playground area
+            const maxDisplayWidth = PLAYGROUND_WIDTH - PLAYGROUND_PADDING;
+            const maxDisplayHeight = PLAYGROUND_HEIGHT - PLAYGROUND_PADDING;
+            
+            displayScale = Math.min(
+                maxDisplayWidth / currentWidth,
+                maxDisplayHeight / currentHeight,
+                1 // Don't scale up small images
+            );
+            
+            const displayWidth = Math.round(currentWidth * displayScale);
+            const displayHeight = Math.round(currentHeight * displayScale);
+
+            // Set display size on the image
+            preview.style.width = displayWidth + 'px';
+            preview.style.height = displayHeight + 'px';
+            
+            // Draw stretched image to canvas and set as src
+            const canvas = document.createElement('canvas');
+            canvas.width = currentWidth;
+            canvas.height = currentHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(originalImage, 0, 0, currentWidth, currentHeight);
+            preview.src = canvas.toDataURL('image/png');
+
+            sizeLabel.textContent = `${currentWidth} × ${currentHeight}`;
+        }
+
+        function resetToOriginal() {
+            currentWidth = originalWidth;
+            currentHeight = originalHeight;
+            widthInput.value = originalWidth;
+            heightInput.value = originalHeight;
+            updatePreview();
+        }
+
+        function scaleBy(factor) {
+            currentWidth = Math.round(originalWidth * factor);
+            currentHeight = Math.round(originalHeight * factor);
+            widthInput.value = currentWidth;
+            heightInput.value = currentHeight;
+            updatePreview();
+        }
+
+        function doubleWidth() {
+            currentWidth = currentWidth * 2;
+            widthInput.value = currentWidth;
+            updatePreview();
+        }
+
+        function doubleHeight() {
+            currentHeight = currentHeight * 2;
+            heightInput.value = currentHeight;
+            updatePreview();
+        }
+
+        function halveWidth() {
+            currentWidth = Math.max(1, Math.round(currentWidth / 2));
+            widthInput.value = currentWidth;
+            updatePreview();
+        }
+
+        function halveHeight() {
+            currentHeight = Math.max(1, Math.round(currentHeight / 2));
+            heightInput.value = currentHeight;
+            updatePreview();
+        }
+
+        function downloadImage() {
+            const canvas = document.createElement('canvas');
+            canvas.width = currentWidth;
+            canvas.height = currentHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(originalImage, 0, 0, currentWidth, currentHeight);
+
+            const link = document.createElement('a');
+            link.download = `stretched_${currentWidth}x${currentHeight}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function loadNewImage() {
+            dropZone.classList.remove('hidden');
+            editor.classList.remove('visible');
+            fileInput.value = '';
+            originalImage = null;
+        }
+    </script>
+</body>
+</html>
